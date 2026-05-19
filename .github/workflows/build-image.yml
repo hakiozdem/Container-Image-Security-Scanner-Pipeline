@@ -1,0 +1,22 @@
+name: build
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+jobs:
+  build:
+    name: build-image
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Build and push Docker images
+        run: docker build -t hakiozdem/container-image-security:1 .
+      - name: Aqua Security Trivy
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: hakiozdem/container-image-security:1
+          exit-code: '1'
+          
+    
