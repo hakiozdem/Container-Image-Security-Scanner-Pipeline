@@ -16,7 +16,7 @@ jobs:
       - name: Aqua Security Trivy
         uses: aquasecurity/trivy-action@v0.36.0
         with:
-          image-ref: hakiozdem/container-image-security:1
+          image-ref: vuln-test
           exit-code: '1'
           format: 'table'
           vuln-type: 'os,library'
