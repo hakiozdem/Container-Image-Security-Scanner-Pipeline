@@ -18,7 +18,7 @@ jobs:
       - name: Docker Login
         run: docker login --username ${{github.repository_owner}} --password ${{secrets.GITHUB_TOKEN}} ghcr.io
       - name: Build Docker images
-        run: docker build -t ghcr.io/${{ github.repository_owner }}/vulnerable-image:${{github.run_number}} -f Dockerfile.vulnerable
+        run: docker build -t ghcr.io/${{ github.repository_owner }}/vulnerable-image:${{github.run_number}} -f Dockerfile.vulnerable .
       - name: Aqua Security Trivy
         uses: aquasecurity/trivy-action@v0.36.0
         with:
