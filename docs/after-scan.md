@@ -445,3 +445,18 @@ Total: 97 (UNKNOWN: 1, LOW: 63, MEDIUM: 29, HIGH: 4, CRITICAL: 0)
 │                │                     │          │          │                             │               │ https://avd.aquasec.com/nvd/cve-2026-27171                   │
 └────────────────┴─────────────────────┴──────────┴──────────┴─────────────────────────────┴───────────────┴──────────────────────────────────────────────────────────────┘
 ```
+
+### Config Scan: trivy config Dockerfile
+
+```
+Report Summary
+
+┌────────────┬────────────┬───────────────────┐
+│   Target   │    Type    │ Misconfigurations │
+├────────────┼────────────┼───────────────────┤
+│ Dockerfile │ dockerfile │         0         │
+└────────────┴────────────┴───────────────────┘
+Legend:
+- '-': Not scanned
+- '0': Clean (no security findings detected)
+```
