@@ -11,16 +11,20 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      - name: Build and push Docker images
-        run: docker build -t hakiozdem/container-image-security:1 .
+      - name: Docker Login
+        run: docker login --username ${{github.repository_owner}} --password ${{secrets.GITHUB_TOKEN}} 
+      - name: Build Docker images
+        run: docker build -t ghcr.io/${{ github.repository_owner }}/container-image-security-scanner:${{github.run_number}} .
       - name: Aqua Security Trivy
         uses: aquasecurity/trivy-action@v0.36.0
         with:
-          image-ref: hakiozdem/container-image-security:1
+          image-ref: ghcr.io/${{ github.repository_owner }}/container-image-security-scanner:${{github.run_number}}
           exit-code: '1'
           format: 'table'
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH'
           ignore-unfixed: true
-          
+      - name: Push the image
+        if: github.ref == 'refs/heads/main' && success()
+        run: docker push ghcr.io/${{ github.repository_owner }}/container-image-security-scanner${{github.run_number}}
     
