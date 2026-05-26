@@ -1,5 +1,5 @@
 # Container Image Security Scanner Pipeline
-A demonstration of how container security scans made by **Aqua Security Trivy** for Dockerfiles and container images, with integrating this scan process to Github Actions Workflow
+A demonstration of container security scanning with Aqua Security Trivy for Dockerfiles and images, integrated into a GitHub Actions workflow.
 ## Overview
 
 The project contains two parallel pipelines — one intentionally vulnerable and one hardened — to illustrate the real-world impact of dependency management and Dockerfile best practices on container security posture.
@@ -8,6 +8,10 @@ The project contains two parallel pipelines — one intentionally vulnerable and
 |-------|------|--------|-------------|--------------------------|-------------------|
 | `vulnerable-image` | `python:3.8-slim` (Debian 12) | 3.8 | 11 HIGH | 7 CRITICAL, 39 HIGH | 2 (root user, no HEALTHCHECK) |
 | `container-image-security-scanner` | `python:3.14-slim` (Debian 13) | 3.14 | **0** | **0 CRITICAL**, 4 HIGH | **0** |
+
+## Badges
+[![build](https://github.com/hakiozdem/Container-Image-Security-Scanner-Pipeline/actions/workflows/build-fixed-image.yml/badge.svg?branch=main)](https://github.com/hakiozdem/Container-Image-Security-Scanner-Pipeline/actions/workflows/build-fixed-image.yml)
+[![build](https://github.com/hakiozdem/Container-Image-Security-Scanner-Pipeline/actions/workflows/build-vulnerable.yml/badge.svg?branch=main)](https://github.com/hakiozdem/Container-Image-Security-Scanner-Pipeline/actions/workflows/build-vulnerable.yml)
 
 ## Project Structure
 
@@ -28,30 +32,40 @@ The project contains two parallel pipelines — one intentionally vulnerable and
     └── after-scan.md            # Trivy scan results on the fixed image
 ```
 
-There is two different Dockerfiles. **Dockerfile.vulnerable** file doesn't have any Healtcheck stage, and has not secure image building.
+There are two different Dockerfiles. **Dockerfile.vulnerable** file doesn't have any Healthcheck stage, and has not secure image building.
 
 **Key problems**:
 - Python 3.8 base (`Debian 12`) ships with CRITICAL CVEs in `libgnutls30`, `libssl3`, `libsqlite3-0`, and `zlib1g`
 - Old Python packages: `Werkzeug 2.0.3`, `starlette 0.25.0`, `urllib3 1.26.x`, `setuptools 57.5.0` — all carrying HIGH severity CVEs
 - Container runs as root, enabling container escape scenarios
 
-On the other hand, **Dockerfile** have healtcheck and it build more securely.
+On the other hand, **Dockerfile** have healthcheck and it build more securely.
 
 **Improvements**: Non-root user, HEALTHCHECK, Python 3.14 base, fully updated Python packages (zero Python-level CVEs).
 
 ## Pipeline Design
-There are two different pipelines to show action. There are similar some ways. However after Trivy scan, they have different actions
+There are two different pipelines to show action. There are similar some ways. However after Trivy scan, they have different actions. Fixed image is pushed to Github Container Registry. On the other hand, vulnerable image is not built, it gives error after scan and it is not pushed to the GHRC
 
-### Pipeline Flowchart
+### Fixed Image Pipeline Flowchart
+
 ```mermaid
 flowchart TD;
   A[Github Checkout]-->B(Docker Login);
   B-->C(Docker Image Build);
   C-->D{Trivy Image Scan};
-  D-->|Fails| E[Upload Sarif];
-  E--> F[Pipeline Fails]
-  D-->|Success| G[Upload Sarif]
-  G--> H[Push Image to GHCR]
+  D-->|Success| E[Upload SARIF];
+  E--> F[Push Image to GHCR]
+```
+
+### Vulnerable Image Pipeline Flowchart
+
+```mermaid
+flowchart TD;
+  A[Github Checkout]-->B(Docker Login);
+  B-->C(Docker Image Build);
+  C-->D(Trivy Image Scan);
+  D-->|Fails| E[Upload SARIF];
+  E--> F[Pipeline Fails, image is not pushed to GHCR]
 ```
 
 ## Scan Results Summary
@@ -85,6 +99,8 @@ Notable CVEs:
 ### After (fixed image — `python:3.14-slim`, Debian 13)
 
 **OS vulnerabilities**: 97 total — **0 CRITICAL, 4 HIGH** (all `affected`/no fix available)
+
+"Note: the fixed image reports more total findings (97 vs 46), but zero are CRITICAL/HIGH with an available fix. Debian 13 simply has more packages catalogued; what matters for the gate is fixable CRITICAL/HIGH count, which dropped to zero."
 
 **Python package vulnerabilities**: **0** across all packages
 
