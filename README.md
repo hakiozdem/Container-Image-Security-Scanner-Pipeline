@@ -9,9 +9,6 @@ The project contains two parallel pipelines — one intentionally vulnerable and
 | `vulnerable-image` | `python:3.8-slim` (Debian 12) | 3.8 | 11 HIGH | 7 CRITICAL, 39 HIGH | 2 (root user, no HEALTHCHECK) |
 | `container-image-security-scanner` | `python:3.14-slim` (Debian 13) | 3.14 | **0** | **0 CRITICAL**, 4 HIGH | **0** |
 
-## Badges
-[![build](https://github.com/hakiozdem/Container-Image-Security-Scanner-Pipeline/actions/workflows/build-fixed-image.yml/badge.svg?branch=main)](https://github.com/hakiozdem/Container-Image-Security-Scanner-Pipeline/actions/workflows/build-fixed-image.yml)
-[![build](https://github.com/hakiozdem/Container-Image-Security-Scanner-Pipeline/actions/workflows/build-vulnerable.yml/badge.svg?branch=main)](https://github.com/hakiozdem/Container-Image-Security-Scanner-Pipeline/actions/workflows/build-vulnerable.yml)
 
 ## Project Structure
 
@@ -57,6 +54,8 @@ flowchart TD;
   E--> F[Push Image to GHCR]
 ```
 
+[![build](https://github.com/hakiozdem/Container-Image-Security-Scanner-Pipeline/actions/workflows/build-fixed-image.yml/badge.svg?branch=main)](https://github.com/hakiozdem/Container-Image-Security-Scanner-Pipeline/actions/workflows/build-fixed-image.yml) ✅ Passes — clean image, pushed to registry
+
 ### Vulnerable Image Pipeline Flowchart
 
 ```mermaid
@@ -67,6 +66,11 @@ flowchart TD;
   D-->|Fails| E[Upload SARIF];
   E--> F[Pipeline Fails, image is not pushed to GHCR]
 ```
+[![build](https://github.com/hakiozdem/Container-Image-Security-Scanner-Pipeline/actions/workflows/build-vulnerable.yml/badge.svg?branch=main)](https://github.com/hakiozdem/Container-Image-Security-Scanner-Pipeline/actions/workflows/build-vulnerable.yml) ❌ Fails by design — gate blocks the vulnerable image
+
+### Outputs of Pipelines
+
+![Pipeline Outputs, Vulnerable Fails - Fixed Passes](docs/screenshots/run-outputs.png)
 
 ## Scan Results Summary
 
@@ -115,6 +119,15 @@ The remaining OS-level findings are either LOW/MEDIUM severity or carry `affecte
 3. **Dockerfile linting catches runtime risks**: Running as root and missing a HEALTHCHECK are surfaced as misconfigurations before the image ships.
 4. **`exit-code: 1` as a security gate**: Setting this in the vulnerable pipeline enforces a hard stop — no image is pushed when CRITICAL/HIGH fixable CVEs are present.
 5. **`ignore-unfixed: true` reduces noise**: Only actionable findings (ones with a known patch) trigger failures, avoiding alert fatigue from issues the maintainer cannot yet fix.
+
+## GitHub Security Tab Integration
+
+Both pipelines upload their Trivy scan results in **SARIF** format to GitHub's
+Security tab using the `upload-sarif` action. Every CVE becomes a filterable
+code-scanning alert with severity, affected package, and remediation details —
+turning raw scanner output into a native, browsable security dashboard.
+
+![Code scanning alerts](docs/screenshots/security-scan-list.png)
 
 ## Running Locally
 
